@@ -8,26 +8,19 @@ app.get('/', (req, res) => {
 });
 
 io.on('connection', (socket) => {
-  console.log('一个连接已建立');
-  socket.on('disconnect', () => {
-    console.log('一个连接已销毁');
+  let userID = '', userColor = parseInt(Math.random() * 16777216).toString(16);
+  socket.on('join', function (userName) {
+    userID = userName;
+    io.emit('sys', userID + ': 已加入房间');
+    console.log(userID + ': 加入了');
   });
-  socket.on('chat message', (msg) => {
-    console.log('message: ' + msg);
-    let parameters = {
-      params: {
-        question: msg
-      }
-    }
-    axios
-      .get('http://i.itpk.cn/api.php', parameters)
-      .then(res => {
-        console.log(res.data);
-        socket.emit('hello', JSON.stringify(res.data));
-      })
-      .catch(err => {
-        console.log(err);
-      });
+  socket.on('disconnect', () => {
+    console.log(`一个连接已销毁: ${userID}离开了`);
+    io.emit('sys', `${userID}离开了`);
+  });
+  socket.on('message', (msg) => {
+    console.log(`${userID}:${msg}`)
+    io.emit('msg', userID, userColor, msg);
   });
 });
 
