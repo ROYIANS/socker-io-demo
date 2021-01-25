@@ -71,6 +71,12 @@
       font-weight: bold;
       text-align: left;
     }
+
+    .server-error {
+      color: #ff2277;
+      font-weight: bold;
+      text-align: left;
+    }
   </style>
 </head>
 
@@ -127,6 +133,16 @@
       config = {
         content: `Server: ${msg}`,
         class: 'server'
+      }
+      $events.appendChild(newItem(config));
+      $bottom.click();
+      input.focus();
+    });
+
+    socket.on('connect_error', (error) => {
+      config = {
+        content: `服务器连接失败`,
+        class: 'server-error'
       }
       $events.appendChild(newItem(config));
       $bottom.click();
