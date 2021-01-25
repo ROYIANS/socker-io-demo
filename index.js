@@ -14,11 +14,16 @@ io.on('connection', (socket) => {
   });
   socket.on('chat message', (msg) => {
     console.log('message: ' + msg);
+    let parameters = {
+      params: {
+        question: msg
+      }
+    }
     axios
-      .get("https://v1.hitokoto.cn/")
+      .get('http://i.itpk.cn/api.php', parameters)
       .then(res => {
-        console.log(res.data.hitokoto);
-        socket.emit('hello', res.data.hitokoto);
+        console.log(res.data);
+        socket.emit('hello', JSON.stringify(res.data));
       })
       .catch(err => {
         console.log(err);
