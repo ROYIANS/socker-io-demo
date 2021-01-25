@@ -112,6 +112,7 @@
       const $bottom = document.getElementById('bottom');
       var storage = window.sessionStorage;
       var nameStore = storage.getItem("userName");
+      let re = /^\[img\]\(.*\)$/
       if (nameStore) {
         userName = nameStore;
         document.getElementById('userName').innerText = userName;
@@ -137,12 +138,32 @@
         $bottom.click();
         input.focus();
       });
+
+      const getImgUrl = (text) => {
+        let re = /\([^\)]+\)/g
+        let s = text;
+        s = s.match(re)[0];
+        s = s.substring(1, s.length - 1);
+        return s;
+      };
+
       const newItem = (config) => {
         const item = document.createElement('li');
         item.innerText = config.content;
         item.classList.add(config.class);
         if (config.user) {
-          item.innerHTML = `<span style="color:#${config.color};font-weight:bold">${config.user}</span><span>${config.content}</span>`
+          item.innerHTML = `<span style="color:#${config.color};font-weight:bold;padding-right:5px">${config.user}:</span><span>${config.content}</span>`
+        }
+        return item;
+      };
+
+      const newImage = (config) => {
+        const item = document.createElement('li');
+        let url = getImgUrl(config.content)
+        item.innerHTML = `<span><img src="${url}" alt="图片" height="200" /></span>`
+        item.classList.add(config.class);
+        if (config.user) {
+          item.innerHTML = `<span style="color:#${config.color};font-weight:bold;padding-right:5px">${config.user}:</span><span><img src="${url}" alt="图片" height="200" /></span>`
         }
         return item;
       };
@@ -155,7 +176,12 @@
             content: `您: ${msg}`,
             class: 'me'
           }
-          $events.appendChild(newItem(config));
+          if (re.test(msg)) {
+            debugger
+            $events.appendChild(newImage(config));
+          } else {
+            $events.appendChild(newItem(config));
+          }
           input.value = '';
           if (msg === 'clear') {
             $events.innerHTML = '';
@@ -178,12 +204,16 @@
       socket.on('msg', (name, userColor, msg) => {
         if (userName !== name) {
           config = {
-            content: `: ${msg}`,
+            content: msg,
             class: 'other',
             color: userColor,
             user: name
           }
-          $events.appendChild(newItem(config));
+          if (re.test(msg)) {
+            $events.appendChild(newImage(config));
+          } else {
+            $events.appendChild(newItem(config));
+          }
           $bottom.click();
           input.focus();
         }
