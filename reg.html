@@ -247,7 +247,7 @@
           name: nickName,
           createTime: new Date()
         }
-        let storage = window.sessionStorage;
+        let storage = window.localStorage;
         storage.setItem("userName", nickName);
         storage.setItem("user", JSON.stringify(user));
         setTimeout(complete, 1000);
@@ -268,7 +268,7 @@
   </script>
   <script>
     window.onload = function () {
-      let storage = window.sessionStorage;
+      let storage = window.localStorage;
       let nameStore = storage.getItem("userName");
       if (nameStore && nameStore.trim() !== '') {
         window.location.href = "/"

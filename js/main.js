@@ -125,14 +125,11 @@ class TypingIndicator extends React.Component {
     }
     /* formatting text */
     typersDisplay = typersDisplay.substr(1);
-    typersDisplay += countTypers > 1 ? ' are ' : ' is ';
     /* if at least one other person writes */
     if (countTypers > 0) {
       return /*#__PURE__*/(
-        React.createElement("div", { className: "chatApp__convTyping" }, typersDisplay, " writing", /*#__PURE__*/
+        React.createElement("div", { className: "chatApp__convTyping" }, typersDisplay, " 正在输入", /*#__PURE__*/
           React.createElement("span", { className: "chatApp__convTypingDot" })));
-
-
     }
     return /*#__PURE__*/(
       React.createElement("div", { className: "chatApp__convTyping" }));
@@ -178,7 +175,11 @@ class MessageItem extends React.Component {
     return /*#__PURE__*/(
       React.createElement("div", { className: "chatApp__convMessageItem " + messagePosition + " clearfix" }, /*#__PURE__*/
         React.createElement("img", { src: this.props.senderAvatar, alt: this.props.sender, className: "chatApp__convMessageAvatar" }), /*#__PURE__*/
-        React.createElement("div", { className: "chatApp__convMessageValue", dangerouslySetInnerHTML: { __html: this.props.message } })));
+        React.createElement("div", { className: "chatApp__convMessageDiv" },
+          React.createElement("div", { className: "chatApp__convMessageName", dangerouslySetInnerHTML: { __html: this.props.sender } }),
+          React.createElement("div", { className: "chatApp__convMessageValue", dangerouslySetInnerHTML: { __html: this.props.message } })
+        )
+      ));
 
 
   }
@@ -217,7 +218,7 @@ class ChatBox extends React.Component {
 
         React.createElement(Reg, {
           onClick: () => {
-            var storage = window.sessionStorage;
+            var storage = window.localStorage;
             storage.removeItem('userName');
             storage.removeItem('user');
             location.reload();
@@ -271,8 +272,8 @@ class ChatRoom extends React.Component {
           message: '欢迎进入🐟聊天室🐟'
         }
       ],
-      isTyping: [],
-      storage: window.sessionStorage,
+      isTyping: {},
+      storage: window.localStorage,
 
     };
 
@@ -289,11 +290,16 @@ class ChatRoom extends React.Component {
         let sas = hex_md5(sender.guid)
         let color = sas.substring(sas.length - 6, sas.length)
         let bg = sas.substring(0, 6)
-        this.sendMessage(sender.name, sender.guid, `https://ui-avatars.com/api/?name=${sender.name}&background=${bg}&color=fff`, msg);
+        // this.sendMessage(sender.name, sender.guid, `https://ui-avatars.com/api/?name=${sender.name}&background=${bg}&color=fff`, msg);
+        this.sendMessage(sender.name, sender.guid, `https://avatars.dicebear.com/4.5/api/human/${sas}.svg`, msg);
       }
     })
     window.mySocket.on('sys', (msg) => {
       this.sendMessage('sys', 'sys', '', msg);
+    })
+    window.mySocket.on('typing-list', (msg) => {
+      let stateTyping = JSON.parse(msg)
+      this.setState({ isTyping: stateTyping });
     })
   }
   /* adds a new message to the chatroom */
@@ -315,16 +321,18 @@ class ChatRoom extends React.Component {
   /* updates the writing indicator if not already displayed */
   typing(writer) {
     if (!this.state.isTyping[writer]) {
-      let stateTyping = this.state.isTyping;
-      stateTyping[writer] = true;
-      this.setState({ isTyping: stateTyping });
+      // let stateTyping = this.state.isTyping;
+      // stateTyping[writer] = true;
+      // this.setState({ isTyping: stateTyping });
+      window.mySocket.emit('typing', writer);
     }
   }
   /* hide the writing indicator */
   resetTyping(writer) {
-    let stateTyping = this.state.isTyping;
-    stateTyping[writer] = false;
-    this.setState({ isTyping: stateTyping });
+    // let stateTyping = this.state.isTyping;
+    // stateTyping[writer] = false;
+    // this.setState({ isTyping: stateTyping });
+    window.mySocket.emit('reset-typing', writer);
   }
 
   render() {
@@ -342,7 +350,8 @@ class ChatRoom extends React.Component {
     let bg = sas.substring(0, 6)
 
     /* user details - can add as many users as desired */
-    users[0] = { id: userStorage.guid, name: userStorage.name, avatar: `https://ui-avatars.com/api/?name=${userStorage.name}&background=${bg}&color=fff` };
+    // users[0] = { id: userStorage.guid, name: userStorage.name, avatar: `https://ui-avatars.com/api/?name=${userStorage.name}&background=${bg}&color=fff` };
+    users[0] = { id: userStorage.guid, name: userStorage.name, avatar: `https://avatars.dicebear.com/4.5/api/human/${sas}.svg` };
 
     /* creation of a chatbox for each user present in the chatroom */
     Object.keys(users).map(function (key) {
@@ -371,7 +380,7 @@ class ChatRoom extends React.Component {
 
 /* render the chatroom */
 setTimeout(() => {
-  let storage = window.sessionStorage;
+  let storage = window.localStorage;
   let nameStore = storage.getItem("userName");
   if (!nameStore || nameStore === null || nameStore.trim() === '') {
     window.location.href = "/reg"

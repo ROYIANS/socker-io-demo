@@ -45,6 +45,8 @@ app.get('/scrollbar_arrow.png', (req, res) => {
   res.sendFile(__dirname + '/scrollbar_arrow.png');
 });
 
+let typeList = {}
+
 io.on('connection', (socket) => {
   let user = {}
   socket.on('join', function (userStr) {
@@ -54,11 +56,22 @@ io.on('connection', (socket) => {
   });
   socket.on('disconnect', () => {
     console.log(`一个连接已销毁: ${user.name}离开了`);
+    typeList[user.name] = false
+    io.emit('typing-list', JSON.stringify(typeList));
     io.emit('sys', `${user.name}离开了`);
   });
   socket.on('message', (msg) => {
     console.log(`${user.name}:${msg}`)
     io.emit('come-msg', JSON.stringify(user), msg);
+  });
+  socket.on('typing', (writer) => {
+    console.log(`${writer}-正在输入...`)
+    typeList[writer] = true
+    io.emit('typing-list', JSON.stringify(typeList));
+  });
+  socket.on('reset-typing', (writer) => {
+    typeList[writer] = false
+    io.emit('typing-list', JSON.stringify(typeList));
   });
 });
 

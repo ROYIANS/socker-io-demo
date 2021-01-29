@@ -196,6 +196,18 @@
             overflow-y: auto;
         }
 
+        .chatApp__convMessageDiv {
+            align-items: baseline;
+            flex-direction: column;
+            display: flex;
+        }
+
+        .chatApp__convMessageName {
+            font-weight: bold;
+            font-size: 8px;
+            color: #555;
+        }
+
         .chatApp__convMessageItem {
             padding: 1rem 0 0 0;
             opacity: 0;
@@ -232,12 +244,27 @@
             /* text-overflow: ellipsis; */
         }
 
-        .chatApp__convMessageItem--sys .chatApp__convMessageAvatar {
+        .chatApp__convMessageItem--sys .chatApp__convMessageAvatar, .chatApp__convMessageItem--sys .chatApp__convMessageName {
             display: none;
         }
 
+        .chatApp__convMessageItem--sys .chatApp__convMessageDiv, .chatApp__convMessageItem--left .chatApp__convMessageDiv {
+            align-items: flex-start;
+        }
+
+        .chatApp__convMessageItem--right .chatApp__convMessageDiv {
+            align-items: flex-end;
+        }
+
+        .chatApp__convMessageItem--right .chatApp__convMessageName {
+            margin: 0 0.5rem 0.2rem 0;
+        }
+
+        .chatApp__convMessageItem--left .chatApp__convMessageName {
+            margin: 0 0 0.2rem 0.5rem;
+        }
+
         .chatApp__convMessageItem--sys .chatApp__convMessageValue {
-            float: left;
             text-align: center;
             margin: 0 0 0 0.5rem;
             font-size: 8px;
@@ -252,7 +279,6 @@
         }
 
         .chatApp__convMessageItem--left .chatApp__convMessageValue {
-            float: left;
             /* text-align: left; */
             margin: 0 0 0 1rem;
             border: 1px solid #dadada;
