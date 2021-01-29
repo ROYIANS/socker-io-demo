@@ -63,21 +63,25 @@ io.on('connection', (socket) => {
   let user = {}
   socket.on('join', function (userStr) {
     user = JSON.parse(userStr);
-    io.emit('sys', user.name + ': 已加入房间');
-    console.log(`${user.name}[${user.guid}]-${user.createTime}: 加入了`);
+    io.emit('sys', user.name + ' 进入了房间');
+    console.log('\n=SYS=========================');
+    console.log(`${user.name} 建立连接`);
+    console.log(`UUID: ${user.guid}] 用户注册时间：${user.createTime}`)
+    console.log('=============================\n');
   });
   socket.on('disconnect', () => {
-    console.log(`一个连接已销毁: ${user.name}离开了`);
+    console.log('\n=SYS=========================');
+    console.log(`${user.name} 断开连接`);
+    console.log('=============================\n');
     typeList[user.name] = false
     io.emit('typing-list', JSON.stringify(typeList));
-    io.emit('sys', `${user.name}离开了`);
+    io.emit('sys', `${user.name} 离开了`);
   });
   socket.on('message', (msg) => {
-    console.log(`${user.name}:${msg}`)
+    console.log(`[${user.name}](${user.guid.substring(0, 8)}): ${msg}`)
     io.emit('come-msg', JSON.stringify(user), msg);
   });
   socket.on('typing', (writer) => {
-    console.log(`${writer}-正在输入...`)
     typeList[writer] = true
     io.emit('typing-list', JSON.stringify(typeList));
   });
@@ -88,5 +92,5 @@ io.on('connection', (socket) => {
 });
 
 http.listen(3000, () => {
-  console.log('监听端口：3000');
+  console.log('开启服务，监听端口：3000');
 });
