@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Socket.IO</title>
+  <style>
+    body {
+      margin: 0;
+      padding-bottom: 3rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      overflow-x: hidden;
+    }
+
+    #form {
+      background: rgba(0, 0, 0, 0.15);
+      padding: 0.25rem;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      height: 3rem;
+      box-sizing: border-box;
+      backdrop-filter: blur(10px);
+    }
+
+    #input {
+      border: none;
+      padding: 0 1rem;
+      flex-grow: 1;
+      border-radius: 2rem;
+      margin: 0.25rem;
+    }
+
+    #input:focus {
+      outline: none;
+    }
+
+    #form>button {
+      background: #333;
+      border: none;
+      padding: 0 1rem;
+      margin: 0.25rem;
+      border-radius: 3px;
+      outline: none;
+      color: #fff;
+    }
+
+    #messages {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    #messages>li {
+      padding: 0.5rem 1rem;
+      font-size: 10px;
+    }
+
+    #messages>li:nth-child(odd) {
+      background: #efefef;
+    }
+
+    .me {
+      color: #212121;
+      font-weight: bold;
+      text-align: right;
+    }
+
+    .other {
+      color: #212121;
+      font-weight: normal;
+      text-align: left;
+    }
+
+    .server {
+      color: #009688;
+      font-weight: bold;
+      text-align: left;
+    }
+
+    .server-error {
+      color: #ff2277;
+      font-weight: bold;
+      text-align: left;
+    }
+
+    .top-msg {
+      width: 100vw;
+      background-color: #212121;
+      text-align: center;
+      color: #ffffff;
+      padding: 10px 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div id='userName' class="top-msg"></div>
+  <ul id="messages"></ul>
+  <a id="bottom" name="bottom" href="#bottom"></a>
+  <form id="form" action="">
+    <input id="input" autocomplete="off" /><button>Send</button>
+  </form>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    window.onload = function () {
+      var userName = document.getElementById('userName').innerText;
+      var input = document.getElementById('input');
+      var form = document.getElementById('form');
+      const $events = document.getElementById('messages');
+      const $bottom = document.getElementById('bottom');
+      var storage = window.sessionStorage;
+      var nameStore = storage.getItem("userName");
+      let re = /^\[img\]\(.*\)$/
+      if (nameStore) {
+        userName = nameStore;
+        document.getElementById('userName').innerText = userName;
+      }
+      while (userName.trim() === '') {
+        // 设置用户名
+        let promptName = prompt("请设置你的昵称", "")
+        userName = promptName ? promptName : '未命名';
+        storage.setItem("userName", userName);
+        document.getElementById('userName').innerText = userName;
+      }
+      let socket = io();
+      socket.on('connect', function () {
+        socket.emit('join', userName)
+      })
+      // 监听系统消息
+      socket.on('sys', function (sysMsg) {
+        config = {
+          content: `[Sys] ${sysMsg}`,
+          class: 'server'
+        }
+        $events.appendChild(newItem(config));
+        $bottom.click();
+        input.focus();
+      });
+
+      const getImgUrl = (text) => {
+        let re = /\([^\)]+\)/g
+        let s = text;
+        s = s.match(re)[0];
+        s = s.substring(1, s.length - 1);
+        return s;
+      };
+
+      const newItem = (config) => {
+        const item = document.createElement('li');
+        item.innerText = config.content;
+        item.classList.add(config.class);
+        if (config.user) {
+          item.innerHTML = `<span style="color:#${config.color};font-weight:bold;padding-right:5px">${config.user}:</span><span>${config.content}</span>`
+        }
+        return item;
+      };
+
+      const newImage = (config) => {
+        const item = document.createElement('li');
+        let url = getImgUrl(config.content)
+        item.innerHTML = `<span><img src="${url}" alt="图片" height="200" /></span>`
+        item.classList.add(config.class);
+        if (config.user) {
+          item.innerHTML = `<span style="color:#${config.color};font-weight:bold;padding-right:5px">${config.user}:</span><span><img src="${url}" alt="图片" height="200" /></span>`
+        }
+        return item;
+      };
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (input.value) {
+          let msg = input.value
+          config = {
+            content: `您: ${msg}`,
+            class: 'me'
+          }
+          if (re.test(msg)) {
+            debugger
+            $events.appendChild(newImage(config));
+          } else {
+            $events.appendChild(newItem(config));
+          }
+          input.value = '';
+          if (msg === 'clear') {
+            $events.innerHTML = '';
+          } else {
+            socket.emit('message', msg);
+            $bottom.click();
+          }
+          input.focus();
+        }
+      });
+
+      socket.on('connect', () => {
+        config = {
+          content: '服务器已连接',
+          class: 'server'
+        }
+        $events.appendChild(newItem(config));
+      });
+
+      socket.on('msg', (name, userColor, msg) => {
+        if (userName !== name) {
+          config = {
+            content: msg,
+            class: 'other',
+            color: userColor,
+            user: name
+          }
+          if (re.test(msg)) {
+            $events.appendChild(newImage(config));
+          } else {
+            $events.appendChild(newItem(config));
+          }
+          $bottom.click();
+          input.focus();
+        }
+      });
+
+      socket.on('connect_error', (error) => {
+        config = {
+          content: `服务器连接失败`,
+          class: 'server-error'
+        }
+        $events.appendChild(newItem(config));
+        $bottom.click();
+        input.focus();
+      });
+    }
+  </script>
+</body>
+
+</html>
