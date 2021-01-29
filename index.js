@@ -2,6 +2,18 @@ const app = require('express')();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const axios = require("axios");
+const Avatars = require("@dicebear/avatars");
+const sprites = require("@dicebear/avatars-avataaars-sprites");
+
+app.get('/avatar/:user', (req, res) => {
+  let options = {
+    skin: ['light']
+  };
+  let avatars = new Avatars.default(sprites.default, options);
+  let svg = avatars.create(req.params.user);
+  res.header('Content-Type', 'image/svg+xml')
+  res.send(svg);
+})
 
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');

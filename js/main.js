@@ -291,7 +291,7 @@ class ChatRoom extends React.Component {
         let color = sas.substring(sas.length - 6, sas.length)
         let bg = sas.substring(0, 6)
         // this.sendMessage(sender.name, sender.guid, `https://ui-avatars.com/api/?name=${sender.name}&background=${bg}&color=fff`, msg);
-        this.sendMessage(sender.name, sender.guid, `https://avatars.dicebear.com/4.5/api/human/${sas}.svg`, msg);
+        this.sendMessage(sender.name, sender.guid, `/avatar/${sas}.svg?t=${(new Date()).getTime().toString()}`, msg);
       }
     })
     window.mySocket.on('sys', (msg) => {
@@ -351,7 +351,7 @@ class ChatRoom extends React.Component {
 
     /* user details - can add as many users as desired */
     // users[0] = { id: userStorage.guid, name: userStorage.name, avatar: `https://ui-avatars.com/api/?name=${userStorage.name}&background=${bg}&color=fff` };
-    users[0] = { id: userStorage.guid, name: userStorage.name, avatar: `https://avatars.dicebear.com/4.5/api/human/${sas}.svg` };
+    users[0] = { id: userStorage.guid, name: userStorage.name, avatar: `/avatar/${sas}.svg?t=${(new Date()).getTime().toString()}` };
 
     /* creation of a chatbox for each user present in the chatroom */
     Object.keys(users).map(function (key) {
