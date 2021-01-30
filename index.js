@@ -3,11 +3,14 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const axios = require("axios");
 const Avatars = require("@dicebear/avatars");
-const sprites = require("@dicebear/avatars-avataaars-sprites");
+// const sprites = require("@dicebear/avatars-avataaars-sprites");
+const sprites = require("@dicebear/avatars-human-sprites");
 
 app.get('/avatar/:user', (req, res) => {
+  let arr = ['happy', 'sad', 'surprised']
+  let op = arr[Math.floor((Math.random() * arr.length))]
   let options = {
-    skin: ['light']
+    mood: [op]
   };
   let avatars = new Avatars.default(sprites.default, options);
   let svg = avatars.create(req.params.user);
